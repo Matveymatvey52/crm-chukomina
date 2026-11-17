@@ -8,6 +8,7 @@
   ];
   const SRC = { ig: "Instagram", tg: "Telegram-канал", form: "Сайт, форма", quiz: "Сайт, подбор", ref: "Рекомендация", call: "Звонок", other: "Другое" };
   const SRC_IC = { ig: "ig", tg: "tg", form: "globe", quiz: "quiz", ref: "ref", call: "phone", other: "chat" };
+  const VIA = { tg: "в Telegram", mail: "на почту", "": "не получал" };
   const LOST = ["Купил в другом месте", "Не подошла цена", "Передумал покупать", "Не выходит на связь", "Другое"];
   const ROOMS = ["Студия", "1-комнатная", "2-комнатная", "3-комнатная", "4 комнаты и больше"];
   const PAY = ["Семейная ипотека", "IT-ипотека", "Рыночная ипотека", "Военная ипотека", "100 % оплата", "Рассрочка", "Пока не решил"];
@@ -58,7 +59,7 @@
     cal: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     pdf: '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>', upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
     download: '<path d="M12 4v12M7 11l5 5 5-5M4 20h16"/>', eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
-    chat: '<path d="M4 5h16v11H9l-5 4z"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4z"/>', mail: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/>', edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
     trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
     link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   };
@@ -201,7 +202,7 @@
     if (dup) { s.err = `Этот номер уже есть у клиента «${dup.name}»`; s.dup = dup.id; return this.render(); }
     const budget = Math.round(parseFloat(String(f.budget || "").replace(",", ".")) * 1e6) || 0;
     const zhk = f.zhk && f.zhk !== "_other" ? f.zhk : "";
-    const base = { name: f.name, ph, tgu: (f.tgu || "").replace(/^@/, "").replace(/^https?:\/\/t\.me\//, ""), src: f.src, reel: f.src === "ig" ? f.reel || "" : "", zhk, zhkText: zhk ? "" : f.zhkText || "", rooms: f.rooms, budget, pay: f.pay };
+    const base = { name: f.name, ph, tgu: (f.tgu || "").replace(/^@/, "").replace(/^https?:\/\/t\.me\//, ""), src: f.src, reel: f.src === "ig" ? f.reel || "" : "", zhk, zhkText: zhk ? "" : f.zhkText || "", rooms: f.rooms, budget, pay: f.pay, via: f.via || "" };
     let l;
     if (id) { l = Object.assign(this.lead(id), base); this.hist(l, "Данные клиента изменены"); this.say("Изменения сохранены"); }
     else {
@@ -247,9 +248,9 @@
     this.render();
   };
   P.exportCSV = function () {
-    const head = ["Имя", "Телефон", "Telegram", "Этап", "Источник", "Ролик", "Кодовое слово", "ЖК", "Квартира", "Бюджет, ₽", "Оплата", "Заявка", "Следующий шаг", "Когда", "Заметки"];
+    const head = ["Имя", "Телефон", "Telegram", "Этап", "Источник", "Ролик", "Кодовое слово", "ЖК", "Квартира", "Бюджет, ₽", "Оплата", "Гайд получил", "Заявка", "Следующий шаг", "Когда", "Заметки"];
     const q = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
-    const rows = this.db.leads.map((l) => { const r = l.reel && this.reel(l.reel); return [l.name, l.ph, l.tgu ? "@" + l.tgu : "", stageName(l.stage), SRC[l.src], r ? r.title : "", r ? r.word : "", zhkName(l), l.rooms, l.budget || "", l.pay, when(l.at), l.next ? l.next.text : "", l.next ? when(l.next.at) : "", l.notes.map((n) => n.text).join(" / ")]; });
+    const rows = this.db.leads.map((l) => { const r = l.reel && this.reel(l.reel); return [l.name, l.ph, l.tgu ? "@" + l.tgu : "", stageName(l.stage), SRC[l.src], r ? r.title : "", r ? r.word : "", zhkName(l), l.rooms, l.budget || "", l.pay, VIA[l.via || ""], when(l.at), l.next ? l.next.text : "", l.next ? when(l.next.at) : "", l.notes.map((n) => n.text).join(" / ")]; });
     const csv = "﻿" + [head].concat(rows).map((r) => r.map(q).join(";")).join("\r\n");
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const d = now(); a.download = `Клиенты ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}.csv`; document.body.appendChild(a); a.click(); a.remove();
@@ -289,8 +290,9 @@
     const days = []; for (let i = 13; i >= 0; i--) { const d = new Date(now().getFullYear(), now().getMonth(), now().getDate() - i); days.push({ d, n: this.db.leads.filter((l) => dayDiff(pd(l.at)) === -i).length }); }
     const sent = this.db.reels.reduce((a, r) => a + (pd(r.date) >= from ? r.sent : Math.round(r.sent * Math.min(1, p / 30))), 0);
     return { total: L.length, sent, meet: reached("meet"), deal: reached("deal"), lost: L.filter((l) => l.stage === "lost").length,
-      funnel: order.filter((x) => x !== "lost").map((st) => ({ st, n: reached(st) })), bySrc: keys.map((k) => ({ k, n: L.filter((l) => l.src === k).length })), days };
+      funnel: order.filter((x) => x !== "lost").map((st) => ({ st, n: reached(st) })), bySrc: keys.map((k) => ({ k, n: L.filter((l) => l.src === k).length })), days,
+      byVia: ["tg", "mail", ""].map((k) => ({ k, n: L.filter((l) => (l.via || "") === k).length })) };
   };
 
-  window.CRM = { App, STAGES, SRC, SRC_IC, LOST, ROOMS, PAY, QUICK, ZHK, esc, pad, iso, pd, now, dayDiff, hm, day, when, money, num, initials, stageName, zhkName, zhkImg, late, plural, ic, MON, WD };
+  window.CRM = { App, VIA, STAGES, SRC, SRC_IC, LOST, ROOMS, PAY, QUICK, ZHK, esc, pad, iso, pd, now, dayDiff, hm, day, when, money, num, initials, stageName, zhkName, zhkImg, late, plural, ic, MON, WD };
 })();

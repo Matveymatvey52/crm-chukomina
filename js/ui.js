@@ -55,6 +55,7 @@ window.UI = (function () {
     const steps = MAIN.map((st, i) => `<button class="step ${l.stage === st.id ? "is-cur" : i < cur && l.stage !== "lost" ? "is-done" : ""}" data-act="stage" data-arg="${st.id}">${st.name}</button>`).join("")
       + `<button class="step lost ${l.stage === "lost" ? "is-cur" : ""}" data-act="stage" data-arg="lost">Отказ</button>`;
     const g = r && app.guide(r.guide);
+    const viaLine = `<p class="via via-${l.via || "none"}">${ic(l.via === "mail" ? "mail" : l.via === "tg" ? "tg" : "pdf")}<span>${l.via ? "Гайд получил " + C.VIA[l.via] : "Гайд не получал"}</span></p>`;
     const from = r ? `<div class="from"><img class="from-th" src="${r.img}" alt=""><div><p class="lbl">${ic("ig")} Ролик в Instagram</p><p class="from-t">${esc(r.title)}</p><p class="from-m">Слово <b>«${esc(r.word)}»</b>${g ? `, бот прислал гайд «${esc(g.title)}»` : ""}</p></div></div>`
       : `<div class="from"><span class="src-big src-${l.src}">${ic(SRC_IC[l.src])}</span><div><p class="lbl">Источник</p><p class="from-t">${SRC[l.src]}</p><p class="from-m">Заявка ${when(l.at)}</p></div></div>`;
     let task;
@@ -75,7 +76,7 @@ window.UI = (function () {
         <section class="blk"><h3>Что ищет</h3>
           <div class="want"><img src="${zhkImg(l)}" alt=""><div><p class="w-n">${z ? "ЖК «" + esc(z.name) + "»" : esc(zhkName(l))}</p><p class="w-m">${z ? esc([z.where, z.metro].filter(Boolean).join(", ")) : "Уточнить у клиента"}</p>${z && z.cls ? `<p class="w-c">${esc(z.cls)}</p>` : ""}</div></div>
           <dl class="facts"><div><dt>Квартира</dt><dd>${esc(l.rooms || "не указана")}</dd></div><div><dt>Бюджет</dt><dd>${l.budget ? "до " + money(l.budget) : "не указан"}</dd></div><div><dt>Оплата</dt><dd>${esc(l.pay || "не указана")}</dd></div></dl></section>
-        <section class="blk"><h3>Откуда пришёл клиент</h3>${from}</section>
+        <section class="blk"><h3>Откуда пришёл клиент</h3>${from}${viaLine}</section>
         <section class="blk"><h3>Заметки</h3>
           <div class="noteform"><textarea data-note rows="2" placeholder="Например: перезвонить после 18:00, ждёт одобрения"></textarea><button class="btn sm" data-act="note" data-arg="${l.id}">Сохранить</button></div>
           ${l.notes.map((n, i) => `<div class="noteitem"><p>${esc(n.text)}</p><span>${when(n.at)}<button class="lnk sm" data-act="note-del" data-arg="${i}">Удалить</button></span></div>`).join("") || `<p class="muted">Заметок пока нет</p>`}</section>
@@ -136,7 +137,8 @@ window.UI = (function () {
       <div class="two"><section class="panel"><h3>Воронка</h3><p class="sub">Сколько клиентов дошло до каждого этапа. Отказов: ${S.lost}.</p>
         ${S.funnel.map((f) => `<div class="bar"><span class="bl">${stageName(f.st)}</span><span class="bt"><i style="width:${(f.n / max) * 100}%"></i></span><b>${f.n}</b></div>`).join("")}</section>
       <section class="panel"><h3>Откуда приходят</h3><p class="sub">Новые клиенты по источникам.</p>
-        ${S.bySrc.map((x) => `<div class="bar"><span class="bl"><span class="src src-${x.k}">${ic(SRC_IC[x.k])}<span>${SRC[x.k]}</span></span></span><span class="bt"><i style="width:${(x.n / smax) * 100}%"></i></span><b>${x.n}</b></div>`).join("")}</section></div>
+        ${S.bySrc.map((x) => `<div class="bar"><span class="bl"><span class="src src-${x.k}">${ic(SRC_IC[x.k])}<span>${SRC[x.k]}</span></span></span><span class="bt"><i style="width:${(x.n / smax) * 100}%"></i></span><b>${x.n}</b></div>`).join("")}
+        <h3 class="h3b">Как получили гайд</h3>${S.byVia.map((x) => `<div class="bar"><span class="bl">${{ tg: "В Telegram", mail: "На почту", "": "Не получали" }[x.k]}</span><span class="bt"><i style="width:${(x.n / Math.max(1, S.total)) * 100}%"></i></span><b>${x.n}</b></div>`).join("")}</section></div>
       ${rows.length ? `<section class="panel"><h3>Какие ролики приводят клиентов</h3><table class="tbl"><thead><tr><th>Ролик</th><th>Слово</th><th>Просмотры</th><th>Написали слово</th><th>Получили гайд</th><th>Стали клиентами</th></tr></thead>
         <tbody>${rows.map(({ r, n }) => `<tr><td><span class="tr-r"><img src="${r.img}" alt="">${esc(r.title)}</span></td><td><span class="word sm">«${esc(r.word)}»</span></td><td>${num(r.views)}</td><td>${num(r.comments)}</td><td>${num(r.sent)}</td><td><b>${n}</b></td></tr>`).join("")}</tbody></table></section>` : ""}
       <section class="panel"><h3>Новые клиенты по дням, две недели</h3><div class="days">${S.days.map((d) => `<div class="day ${C.dayDiff(d.d) === 0 ? "is-today" : ""}"><span class="dv">${d.n || ""}</span><i style="height:${Math.max(4, (d.n / dmax) * 100)}%"></i><span class="dl">${d.d.getDate()}</span></div>`).join("")}</div></section>`;
@@ -158,7 +160,7 @@ window.UI = (function () {
   /* ---------- окна ---------- */
   function opt(list, val, map) { return list.map((x) => { const [v, t] = Array.isArray(x) ? x : [x, map ? map[x] : x]; return `<option value="${esc(v)}" ${v === val ? "selected" : ""}>${esc(t)}</option>`; }).join(""); }
   function leadForm(app) {
-    const id = app.s.modal.id, l = id ? app.lead(id) : { name: "", ph: "", tgu: "", src: "ig", reel: "", zhk: "", zhkText: "", rooms: "2-комнатная", budget: 0, pay: "Семейная ипотека" };
+    const id = app.s.modal.id, l = id ? app.lead(id) : { name: "", ph: "", tgu: "", src: "ig", reel: "", via: "", zhk: "", zhkText: "", rooms: "2-комнатная", budget: 0, pay: "Семейная ипотека" };
     const t = soon();
     const zl = Object.values(ZHK).sort((a, b) => a.name.localeCompare(b.name, "ru"));
     return `<form class="mform" data-leadform><div class="m-h"><h2>${id ? "Изменить клиента" : "Новый клиент"}</h2><button type="button" class="iconbtn" data-act="modal-close" aria-label="Закрыть">${ic("x")}</button></div>
@@ -172,7 +174,8 @@ window.UI = (function () {
       <label class="fld wide f-zhktext" ${!l.zhk && l.zhkText ? "" : "hidden"}><span>Название ЖК</span><input name="zhkText" value="${esc(l.zhkText)}" placeholder="Например: ЖК «Новое Внуково»"></label>
       <label class="fld"><span>Квартира</span><select name="rooms">${opt(C.ROOMS, l.rooms)}</select></label>
       <label class="fld"><span>Бюджет, млн ₽</span><input name="budget" inputmode="decimal" value="${l.budget ? String(l.budget / 1e6).replace(".", ",") : ""}" placeholder="12,5"></label>
-      <label class="fld wide"><span>Оплата</span><select name="pay">${opt(C.PAY, l.pay)}</select></label>
+      <label class="fld"><span>Оплата</span><select name="pay">${opt(C.PAY, l.pay)}</select></label>
+      <label class="fld"><span>Как получил гайд</span><select name="via">${opt([["tg", "В Telegram"], ["mail", "На почту"], ["", "Не получал"]], l.via || "")}</select></label>
       ${id ? "" : `<label class="fld wide"><span>Заметка</span><textarea name="note" rows="2" placeholder="Что важно запомнить"></textarea></label>
       <fieldset class="fset wide"><legend>Первый шаг</legend><input name="ntext" value="Позвонить и познакомиться"><div class="nrow"><input type="date" name="ndate" value="${dateIn(t)}" aria-label="Дата"><input type="time" name="ntime" value="${hm(t)}" aria-label="Время"></div></fieldset>`}
       </div></div>

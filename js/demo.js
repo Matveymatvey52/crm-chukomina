@@ -54,7 +54,9 @@ window.Demo = (function () {
       const idx = ORDER.indexOf(stage);
       for (let k = 1; k <= idx; k++) { const day = Math.min(dd + k * 2, -1 - (idx - k)); hist.push({ at: A(day, `${10 + ((k * 3 + i) % 8)}:${pad((i * 7 + k * 13) % 60)}`), text: "Этап: " + NAMES[ORDER[k]] }); }
       if (stage === "lost") hist.push({ at: A(dd + 6, "15:20"), text: "Отказ: купила вторичку" });
-      return { id: "d" + (i + 1), name, ph, tgu, src, reel, stage, zhk, zhkText: "", rooms, budget, pay, at: created, next, notes: note ? [{ at: created, text: note }] : [], hist, lost: stage === "lost" ? { reason: "Купил в другом месте", text: "Купила вторичку" } : null };
+      const via = src === "ig" || src === "tg" ? "tg" : src === "form" || src === "quiz" ? "mail" : "";
+      if (via === "mail") hist.splice(1, 0, { at: created, text: "Гайд отправлен на почту" });
+      return { id: "d" + (i + 1), name, ph, tgu, src, reel, via, stage, zhk, zhkText: "", rooms, budget, pay, at: created, next, notes: note ? [{ at: created, text: note }] : [], hist, lost: stage === "lost" ? { reason: "Купил в другом месте", text: "Купила вторичку" } : null };
     });
     const sends = [
       [0, "10:47", "@marina.koval", "g-ipoteka", "Telegram", "ипотека", ""], [0, "10:20", "@sasha_dmitriev", "g-invest", "Telegram", "инвест", ""],

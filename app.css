@@ -396,3 +396,7 @@ body{overscroll-behavior:none}
 .v1.phone .ptop h1{font-size:26px}
 .v1.phone .ptop>span{width:40px}
 @media (max-width:1180px){.v1.desk{grid-template-columns:220px minmax(0,1fr)}.v1 .rgrid{grid-template-columns:1fr}.v1 .ggrid{grid-template-columns:repeat(3,1fr)}.v1 .tiles{grid-template-columns:repeat(2,1fr)}}
+.v1 .via{display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 12px;border-radius:12px;font-size:13.5px;font-weight:600;background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.v1 .via .ic{width:17px;height:17px}
+.v1 .via-tg{color:#2c6a95}.v1 .via-mail{color:#2b6649}.v1 .via-none{color:var(--ink3);font-weight:500}
+.v1 .h3b{margin-top:16px;margin-bottom:6px;font-size:16px}

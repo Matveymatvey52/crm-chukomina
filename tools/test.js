@@ -24,10 +24,11 @@ const PDF = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 
     await shot("02-form");
     await pg.fill("[data-leadform] [name=name]", "Тест Тестов"); await pg.fill("[data-leadform] [name=ph]", "8 (916) 123-45-67");
     await pg.selectOption("[data-leadform] [name=src]", "tg"); ok(await pg.locator(".f-reel").isHidden(), "поле «Какой ролик» скрыто для Telegram");
-    await pg.selectOption("[data-leadform] [name=zhk]", "luchi"); await pg.fill("[data-leadform] [name=budget]", "11,5");
+    await pg.selectOption("[data-leadform] [name=zhk]", "luchi"); await pg.fill("[data-leadform] [name=budget]", "11,5"); await pg.selectOption("[data-leadform] [name=via]", "tg");
     await pg.click("[data-act=lead-save]"); await W(400);
     ok(await pg.locator(".cl-n h2", { hasText: "Тест Тестов" }).count() === 1, "клиент добавлен и открыт");
     ok((await pg.locator(".contacts a").first().getAttribute("href")) === "tel:+79161234567", "телефон приведён к виду +7 и звонит");
+    ok(await pg.locator(".via", { hasText: "в Telegram" }).count() === 1, "отмечено, что гайд получен в Telegram");
     await shot("03-client");
     // задача: готово → что дальше
     await pg.click(".task [data-act=done]"); await W();
@@ -84,7 +85,7 @@ const PDF = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 
     await W(); await shot("08-settings");
     const [dl] = await Promise.all([pg.waitForEvent("download", { timeout: 5000 }).catch(() => null), pg.click("[data-act=export]")]);
     ok(dl && /Клиенты .*\.csv/.test(dl.suggestedFilename()), "таблица скачивается: " + (dl ? dl.suggestedFilename() : "нет"));
-    if (dl) { const p = await dl.path(); const txt = fs.readFileSync(p, "utf8"); ok(txt.includes("Тест Тестов") && txt.includes("Отказ"), "в таблице есть новый клиент"); }
+    if (dl) { const p = await dl.path(); const txt = fs.readFileSync(p, "utf8"); ok(txt.includes("Тест Тестов") && txt.includes("Отказ") && txt.includes("Гайд получил"), "в таблице есть новый клиент и как он получил гайд"); }
     // вид клиента и доска для снимков
     await pg.click(`[data-act=tab][data-arg=leads]`); await W();
     if (mode === "desk") await pg.click("[data-act=lostcol]");
